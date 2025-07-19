@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "HackerRank to GitHub",
-  "version": "1.1",
+  "version": "1.2",
   "description": "Push HackerRank submissions to GitHub using correct file extension and problem name.",
   "permissions": ["scripting", "tabs", "storage"],
   "host_permissions": ["https://www.hackerrank.com/*"],
