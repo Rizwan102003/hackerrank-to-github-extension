@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "HackerRank to GitHub",
+  "version": "1.0",
+  "description": "Export HackerRank code to GitHub with correct file extension.",
+  "permissions": ["scripting", "tabs"],
+  "host_permissions": ["https://www.hackerrank.com/*"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Export to GitHub"
+  },
+  "content_scripts": [{
+    "matches": ["https://www.hackerrank.com/*"],
+    "js": ["content.js"]
+  }]
+}
