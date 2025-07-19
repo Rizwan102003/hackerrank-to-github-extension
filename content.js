@@ -1,68 +1,78 @@
-const languageMap = {
-  'Java': 'java',
-  'Python 3': 'py',
-  'C++': 'cpp',
-  'C': 'c',
-  'JavaScript': 'js',
-  'Go': 'go',
-  'Ruby': 'rb'
-};
 
-const getCodeDetails = () => {
-  const codeEl = document.querySelector('.view-lines');
-  let code = '';
-  if (codeEl) {
-    code = Array.from(codeEl.querySelectorAll('div')).map(line => line.innerText).join('\n');
-  }
+function getLanguageExtension(language) {
+    const map = {
+        'java': 'java',
+        'python': 'py',
+        'cpp': 'cpp',
+        'c': 'c',
+        'javascript': 'js',
+        'ruby': 'rb',
+        'go': 'go'
+    };
+    return map[language.toLowerCase()] || 'txt';
+}
 
-  const langEl = document.querySelector('[data-attr2="Language"]') || document.querySelector('.css-1hwfws3');
-  const language = langEl ? langEl.innerText.trim() : 'text';
+function waitForSuccess() {
+    const observer = new MutationObserver(() => {
+        const successMsg = document.querySelector('.congrats-wrapper');
+        if (successMsg) {
+            observer.disconnect();
+            uploadToGitHub();
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+}
 
-  const titleEl = document.querySelector('h1');
-  const problem = titleEl ? titleEl.innerText.trim().replace(/\s+/g, '_') : 'hackerank_problem';
-
-  console.log('[HR2GH] Code:', code.slice(0, 50) + '...');
-  console.log('[HR2GH] Lang:', language);
-  console.log('[HR2GH] Problem:', problem);
-
-  return { code, language, problem };
-};
-
-const observer = new MutationObserver((mutations) => {
-  for (let mutation of mutations) {
-    const addedNodes = Array.from(mutation.addedNodes);
-    for (let node of addedNodes) {
-      if (node.nodeType === 1 && node.textContent.includes('All test cases passed')) {
-        console.log('[HR2GH] Success message detected');
-
-        const { code, language, problem } = getCodeDetails();
-        const ext = languageMap[language] || 'txt';
-        const filename = `${problem}.${ext}`;
-
-        chrome.storage.local.get(['gh_token', 'gh_repo'], ({ gh_token, gh_repo }) => {
-          if (!gh_token || !gh_repo) {
-            console.warn('[HR2GH] GitHub token or repo not found in storage');
+function uploadToGitHub() {
+    chrome.runtime.sendMessage({ type: "getTokenAndRepo" }, ({ token, repo }) => {
+        if (!token || !repo) {
+            console.log("Token or Repo not found.");
             return;
-          }
+        }
+        
+        const codeElement = document.querySelector('pre');
+        const langElement = document.querySelector('[data-attr2]');
+        const title = document.querySelector("div.hr_tour-challenge-name h1")?.innerText.trim().replace(/\s+/g, '_') || "submission";
 
-          fetch(`https://api.github.com/repos/${gh_repo}/contents/${filename}`, {
-            method: 'PUT',
+        if (!codeElement || !langElement) return;
+        
+        const code = codeElement.innerText;
+        const language = langElement.getAttribute("data-attr2");
+        const extension = getLanguageExtension(language);
+        const filename = `${title}.${extension}`;
+
+        const apiUrl = `https://api.github.com/repos/${repo}/contents/${filename}`;
+
+        fetch(apiUrl, {
+            method: 'GET',
             headers: {
-              'Authorization': `token ${gh_token}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              message: `Add solution for ${problem}`,
-              content: btoa(unescape(encodeURIComponent(code)))
-            })
-          }).then(res => {
-            if (res.ok) console.log('[HR2GH] ✅ Submission pushed to GitHub');
-            else res.text().then(err => console.error('[HR2GH] ❌ GitHub error:', err));
-          });
-        });
-      }
-    }
-  }
-});
+                'Authorization': `token ${token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            const payload = {
+                message: `Add solution for ${title}`,
+                content: btoa(unescape(encodeURIComponent(code))),
+                ...(data.sha && { sha: data.sha })
+            };
 
-observer.observe(document.body, { childList: true, subtree: true });
+            return fetch(apiUrl, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                },
+                body: JSON.stringify(payload)
+            });
+        })
+        .then(res => res.json())
+        .then(result => {
+            console.log("Committed to GitHub:", result.content?.path);
+        })
+        .catch(err => console.error("GitHub commit failed:", err));
+    });
+}
+
+waitForSuccess();

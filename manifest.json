@@ -1,16 +1,1 @@
-{
-  "manifest_version": 3,
-  "name": "HackerRank to GitHub",
-  "version": "1.2",
-  "description": "Push HackerRank submissions to GitHub using correct file extension and problem name.",
-  "permissions": ["scripting", "tabs", "storage"],
-  "host_permissions": ["https://www.hackerrank.com/*"],
-  "action": {
-    "default_popup": "popup.html",
-    "default_title": "Export to GitHub"
-  },
-  "content_scripts": [{
-    "matches": ["https://www.hackerrank.com/*"],
-    "js": ["content.js"]
-  }]
-}
+{"manifest_version": 3, "name": "HackerRank to GitHub AutoSubmitter", "version": "1.0", "description": "Automatically commits successful HackerRank submissions to a GitHub repo.", "permissions": ["storage", "scripting", "tabs"], "host_permissions": ["https://www.hackerrank.com/*"], "background": {"service_worker": "background.js"}, "content_scripts": [{"matches": ["https://www.hackerrank.com/*"], "js": ["content.js"]}], "action": {"default_popup": "popup.html", "default_icon": {"16": "icon.png", "48": "icon.png", "128": "icon.png"}}}
