@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "name": "HackerRank to GitHub",
-  "version": "1.0",
-  "description": "Export HackerRank code to GitHub with correct file extension.",
-  "permissions": ["scripting", "tabs"],
+  "version": "1.1",
+  "description": "Push HackerRank submissions to GitHub using correct file extension and problem name.",
+  "permissions": ["scripting", "tabs", "storage"],
   "host_permissions": ["https://www.hackerrank.com/*"],
   "action": {
     "default_popup": "popup.html",
